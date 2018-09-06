@@ -1,4 +1,4 @@
-package com.mycompany.installer;
+package io.hankersyan.cordova.installer;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -37,6 +37,12 @@ public class Installer extends CordovaPlugin {
             callbackContext.error("need a file.");
             return;
         }
+        // Invalid path will cause the following error
+        // "Parse Error : There is a problem parsing the package"
+        //Uri uri = message.startsWith("file:///") ? Uri.parse(message) : Uri.fromFile(new File(message));
+        if (message.startsWith("file:///")) {
+        	message = message.replace("file:///", "/");
+        }
         File apkFile = new File(message);
         if (!apkFile.exists()) {
             callbackContext.error("invalid file.");
@@ -45,7 +51,6 @@ public class Installer extends CordovaPlugin {
         if (!message.startsWith(Environment.getExternalStorageDirectory().toString())) {
             System.out.println("the input file is not in sdcard folder. \nmaybe access need permission.");
         }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Uri apkUri = FileProvider.getUriForFile(cordova.getActivity(), cordova.getActivity().getPackageName() + ".fileprovider", apkFile);
             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);

@@ -1,16 +1,16 @@
 {
-  "name": "cordova-plugin-android-installer",
+  "name": "cordova-plugin-apk-installer",
   "version": "0.0.1",
   "description": "android apk install",
   "cordova": {
-    "id": "com.mycompany.installer",
+    "id": "cordova-plugin-apk-installer",
     "platforms": [
       "android"
     ]
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shougao/cordova-plugin-apkinstaller.git"
+    "url": "git+https://github.com/hankersyan/cordova-plugin-apk-installer.git"
   },
   "keywords": [
     "ecosystem:cordova",
@@ -19,7 +19,7 @@
   "author": "zqc",
   "license": "GPL",
   "bugs": {
-    "url": "https://github.com/shougao/cordova-plugin-apkinstaller/issues"
+    "url": "https://github.com/hankersyan/cordova-plugin-apk-installer/issues"
   },
-  "homepage": "https://github.com/shougao/cordova-plugin-apkinstaller#readme"
+  "homepage": "https://github.com/hankersyan/cordova-plugin-apk-installer#readme"
 }
