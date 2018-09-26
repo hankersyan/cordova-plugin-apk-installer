@@ -9,13 +9,17 @@ import org.apache.cordova.CallbackContext;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.os.Environment;
 import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -37,19 +41,18 @@ public class Installer extends CordovaPlugin {
             callbackContext.error("need a file.");
             return;
         }
-        // Invalid path will cause the following error
-        // "Parse Error : There is a problem parsing the package"
+        if (!message.startsWith(Environment.getExternalStorageDirectory().toString())) {
+            System.out.println("the input file is not in sdcard folder. \nmaybe access need permission.");
+        }
         //Uri uri = message.startsWith("file:///") ? Uri.parse(message) : Uri.fromFile(new File(message));
+        Uri uri = message.startsWith("file:///") ? Uri.parse(message) : Uri.fromFile(new File(message));
         if (message.startsWith("file:///")) {
-        	message = message.replace("file:///", "/");
+            message = message.replace("file:///", "/");
         }
         File apkFile = new File(message);
         if (!apkFile.exists()) {
-            callbackContext.error("invalid file.");
+            callbackContext.error("File NOT exists." + message);
             return;
-        }
-        if (!message.startsWith(Environment.getExternalStorageDirectory().toString())) {
-            System.out.println("the input file is not in sdcard folder. \nmaybe access need permission.");
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Uri apkUri = FileProvider.getUriForFile(cordova.getActivity(), cordova.getActivity().getPackageName() + ".fileprovider", apkFile);
@@ -60,12 +63,44 @@ public class Installer extends CordovaPlugin {
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             cordova.getActivity().startActivity(intent);
         } else {
-            Uri apkUri = Uri.fromFile(apkFile);
+            File dir = new File(Environment.getExternalStorageDirectory() + "/temp");
+            if (!dir.isDirectory()) {
+                dir.mkdirs();
+            }
+            File extFile = new File(Environment.getExternalStorageDirectory() + "/temp/" + apkFile.getName());
+            try {
+                if (!extFile.exists()) {
+                    extFile.createNewFile();
+                }
+                copy(apkFile, extFile);
+            } catch (IOException e) {
+                callbackContext.error("Failed to copy file to sdcard, " + extFile);
+            }
+            Uri apkUri = Uri.fromFile(extFile);
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
             cordova.getActivity().startActivity(intent);
+        }
+    }
+
+    public static void copy(File src, File dst) throws IOException {
+        InputStream in = new FileInputStream(src);
+        try {
+            OutputStream out = new FileOutputStream(dst);
+            try {
+                // Transfer bytes from in to out
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            } finally {
+                out.close();
+            }
+        } finally {
+            in.close();
         }
     }
 }
